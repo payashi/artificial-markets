@@ -1,0 +1,28 @@
+body {
+  height: 100vh;
+  margin: 0;
+}
+
+#chart {
+  z-index: 1000;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.label {
+  background-color: transparent;
+  color: white;
+}
+
+.label#index {
+  background-color: #0000ffaa;
+}
+
+.label#one {
+  background-color: #ff0000aa;
+}
+
+.label#two{
+  background-color: #00ff00aa;
+}
