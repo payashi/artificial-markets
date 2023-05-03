@@ -131,3 +131,6 @@ dist
 
 # vite build outputs
 docs
+
+# firebase cache files
+.firebase
