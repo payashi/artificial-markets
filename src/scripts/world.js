@@ -16,8 +16,9 @@ const kNumAgents = 500;
 // Global variables
 let camera, scene, renderer, labelRenderer;
 
-let markets = [];
-let groups = [];
+const markets = new THREE.Group();
+const agents = new THREE.Group();
+const lines = new THREE.Group();
 
 
 init();
@@ -46,12 +47,12 @@ function init() {
   );
 
   const marketOne = new THREE.Mesh(
-    new THREE.DodecahedronGeometry(8),
+    new THREE.DodecahedronGeometry(6),
     new THREE.MeshNormalMaterial(),
   );
 
   const marketTwo = new THREE.Mesh(
-    new THREE.DodecahedronGeometry(8),
+    new THREE.DodecahedronGeometry(6),
     new THREE.MeshNormalMaterial(),
   );
 
@@ -68,25 +69,29 @@ function init() {
   const agentsIndex = new AgentGroup('index', marketIndex, kNumAgents, { radius: 6, geometry: new THREE.OctahedronGeometry(0.5) });
   const arbitrators = new AgentGroup('arbitrators', marketIndex, kNumAgents, { radius: 12, mode: 'ring' });
 
-  scene.add(
-    agentsIndex.group,
-    agentsOne.group,
-    agentsTwo.group,
-    arbitrators.group,
-    marketOne,
-    marketTwo,
-    marketIndex,
-  );
-
-
   // Add labels to the markets
-  agentsIndex.addLabel('Index Market');
-  agentsOne.addLabel('Market 01');
-  agentsTwo.addLabel('Market 02');
+  agentsIndex.addLabel('Index Market', 'index');
+  agentsOne.addLabel('Market 01', 'one');
+  agentsTwo.addLabel('Market 02', 'two');
 
   // The order of the following elements corresponds to the order in PAMS
-  markets = [marketOne, marketTwo, marketIndex];
-  groups = [agentsOne, agentsTwo, agentsIndex, arbitrators];
+  markets.add(marketOne, marketTwo, marketIndex);
+  agents.add(agentsOne, agentsTwo, agentsIndex, arbitrators);
+
+  for (let i = 0; i < markets.children.length; i++) {
+    const buyLine = new THREE.Line(
+      new THREE.BufferGeometry(),
+      new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 1 })
+    );
+    const sellLine = new THREE.Line(
+      new THREE.BufferGeometry(),
+      new THREE.LineBasicMaterial({ color: 0x428af5, linewidth: 1 })
+    );
+    lines.add(buyLine);
+    lines.add(sellLine);
+  }
+
+  scene.add(agents, markets, lines);
 }
 
 
@@ -107,51 +112,53 @@ function animate() {
   camera.lookAt(0, 0, 0);
 
   // Rotate the agents
-  groups.forEach(group => {
+  agents.children.forEach(group => {
     group.update(time);
   });
 
   // Rotate the markets
-  markets.forEach(market => {
+  markets.children.forEach(market => {
     market.rotation.setFromRotationMatrix(new THREE.Matrix4().makeRotationAxis(
       market.userData.axis, time * kMarketOmega,
     ));
   })
 
   // Draw a line indicating a buy/sell transaction
-  // pams.data().trades[pamsTime].forEach(order => {
-  //   const groupId = Math.floor(order.agent_id / kNumAgents);
-  //   const agentId = Math.floor(order.agent_id) % kNumAgents;
+  pams.data().trades[pamsTime].forEach((mtrades, mid) => {
+    const startPoint = markets.children[mid].position;
 
-  //   try {
-  //     const agentGroup = groups[groupId].children[agentId];
-  //     const line = agentGroup.children[1 + order.is_buy];
+    // buy lines
+    const buyPoints = mtrades[0].map((trade) => {
+      const gid = trade[0];
+      const aid = trade[1];
+      const group = agents.children[gid];
+      const endPoint = new THREE.Vector3().addVectors(
+        agents.children[gid].position,
+        group.children[aid].position,
+      );
+      return [
+        startPoint, endPoint,
+      ];
+    }).flat();
+    lines.children[2 * mid].geometry.setFromPoints(buyPoints);
 
-  //     const market = markets[order.market_id];
-  //     let marketPos = new THREE.Vector3();
-  //     market.getWorldPosition(marketPos);
-
-  //     // TODO: Aggeregate line objects to single line per group to accelerate rendering
-  //     line.geometry.setFromPoints([
-  //       agentGroup.children[0].position,
-  //       line.worldToLocal(marketPos),
-  //     ]);
-
-  //     line.visible = true;
-
-  //     // The setTimeout function eliminates the need to make all lines invisible at every frame,
-  //     // reducing the load on the drawing process.
-  //     setTimeout(() => {
-  //       line.visible = false;
-  //     }, 30);
-
-  //   } catch (error) {
-  //     console.log(`@${pamsTime} g${groupId}:${agentId}`);
-  //     console.log(groups[groupId].children.length);
-  //   }
-  // });
+    // sell lines
+    const sellPoints = mtrades[1].map((trade) => {
+      const gid = trade[0];
+      const aid = trade[1];
+      const group = agents.children[gid];
+      const endPoint = new THREE.Vector3().addVectors(
+        agents.children[gid].position,
+        group.children[aid].position,
+      );
+      return [
+        startPoint, endPoint,
+      ];
+    }).flat();
+    lines.children[2 * mid + 1].geometry.setFromPoints(sellPoints);
+  });
 
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
-
 }
+

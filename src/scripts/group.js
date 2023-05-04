@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-class AgentGroup {
+class AgentGroup extends THREE.Group {
     constructor(
         id,
         center,
@@ -14,11 +14,9 @@ class AgentGroup {
             material = new THREE.MeshNormalMaterial()
         } = {}
     ) {
-        this.id = id;
+        super();
         this.center = center;
         this.numChildren = numChildren;
-
-        this.group = new THREE.Group();
 
         // Create each child
         for (let i = 0; i < this.numChildren; i++) {
@@ -48,28 +46,18 @@ class AgentGroup {
             data.radius = radius;
             data.omega = omega;
 
-            this.group.add(agent);
+            this.add(agent);
         }
 
-        this.buyLine = new THREE.Line(
-            new THREE.BufferGeometry(),
-            new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 1 })
-        );
-        this.sellLine = new THREE.Line(
-            new THREE.BufferGeometry(),
-            new THREE.LineBasicMaterial({ color: 0x428af5, linewidth: 1 })
-        );
 
-        this.group.add(this.buyLine, this.sellLine);
-
-        this.group.position.copy(this.center.position);
+        this.position.copy(this.center.position);
     }
 
     update(time) {
 
         // the last children are the center and the label
         for (let i = 0; i < this.numChildren; i++) {
-            const agent = this.group.children[i];
+            const agent = this.children[i];
             const data = agent.userData;
 
             // Direction without rotation offset
@@ -85,16 +73,16 @@ class AgentGroup {
     }
 
     // Add labels to the markets
-    addLabel(label) {
+    addLabel(label, id) {
         // Add DOM element
         const div = document.createElement('div');
         div.className = 'label';
-        div.id = this.id;
+        div.id = id;
         div.textContent = label;
 
         const labelCSS = new CSS2DObject(div);
         labelCSS.position.set(0, 10, 0);
-        this.group.add(labelCSS);
+        this.add(labelCSS);
     }
 }
 
