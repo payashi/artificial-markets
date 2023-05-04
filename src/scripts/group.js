@@ -1,86 +1,101 @@
 import * as THREE from 'three';
+import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-export const createGroup = (
-    center,
-    numChildren,
-    {
-        radius = 10,
-        omega = 1,
-        mode = "sphere",
-        geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5),
-        material = new THREE.MeshNormalMaterial()
-    } = {}
-) => {
-    let group = new THREE.Group();
+class AgentGroup {
+    constructor(
+        id,
+        center,
+        numChildren,
+        {
+            radius = 10,
+            omega = 1,
+            mode = "sphere",
+            geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5),
+            material = new THREE.MeshNormalMaterial()
+        } = {}
+    ) {
+        this.id = id;
+        this.center = center;
+        this.numChildren = numChildren;
 
-    // Create each child
-    for (let i = 0; i < numChildren; i++) {
-        const agentGroup = new THREE.Group();
-        // Generate THREE Object
-        let agent = new THREE.Mesh(geometry, material);
+        this.group = new THREE.Group();
 
-        const thetaX = Math.random() * Math.PI * 2;
-        const thetaY = Math.random() * Math.PI * 2;
-        const thetaZ = Math.random() * Math.PI * 2;
+        // Create each child
+        for (let i = 0; i < this.numChildren; i++) {
+            // Generate THREE Object
+            const agent = new THREE.Mesh(geometry, material);
 
-        const rotation = new THREE.Matrix4();
+            const thetaX = Math.random() * Math.PI * 2;
+            const thetaY = Math.random() * Math.PI * 2;
+            const thetaZ = Math.random() * Math.PI * 2;
 
-        if (mode == 'sphere') {
-            rotation.multiplyMatrices(
-                new THREE.Matrix4().makeRotationX(thetaX),
-                new THREE.Matrix4().makeRotationZ(thetaZ),
-            );
-        } else if (mode == 'ring') {
-            rotation.multiplyMatrices(
-                new THREE.Matrix4().makeRotationY(Math.PI * 0.5 + thetaY * 0.05),
-                new THREE.Matrix4().makeRotationZ(thetaZ),
-            );
+            const rotation = new THREE.Matrix4();
+
+            if (mode == 'sphere') {
+                rotation.multiplyMatrices(
+                    new THREE.Matrix4().makeRotationX(thetaX),
+                    new THREE.Matrix4().makeRotationZ(thetaZ),
+                );
+            } else if (mode == 'ring') {
+                rotation.multiplyMatrices(
+                    new THREE.Matrix4().makeRotationY(Math.PI * 0.5 + thetaY * 0.05),
+                    new THREE.Matrix4().makeRotationZ(thetaZ),
+                );
+            }
+
+            const data = agent.userData;
+            data.rotation = rotation;
+            data.radius = radius;
+            data.omega = omega;
+
+            this.group.add(agent);
         }
 
-        const agentData = agent.userData;
-        agentData.rotation = rotation;
-        agentData.radius = radius;
-        agentData.omega = omega;
-
-        agentGroup.add(agent);
-        const buyLine = new THREE.Line(
+        this.buyLine = new THREE.Line(
             new THREE.BufferGeometry(),
-            new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 6 })
+            new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 1 })
         );
-        const sellLine = new THREE.Line(
+        this.sellLine = new THREE.Line(
             new THREE.BufferGeometry(),
-            new THREE.LineBasicMaterial({ color: 0x428af5, linewidth: 6 })
+            new THREE.LineBasicMaterial({ color: 0x428af5, linewidth: 1 })
         );
-        agentGroup.add(buyLine);
-        agentGroup.add(sellLine);
 
-        group.add(agentGroup);
+        this.group.add(this.buyLine, this.sellLine);
+
+        this.group.position.copy(this.center.position);
     }
 
-    group.add(center);
-    group.position.copy(center.position);
-    center.position.set(0, 0, 0);
+    update(time) {
 
-    return group;
-}
+        // the last children are the center and the label
+        for (let i = 0; i < this.numChildren; i++) {
+            const agent = this.group.children[i];
+            const data = agent.userData;
 
-export const updateGroup = (group, time) => {
+            // Direction without rotation offset
+            const pos = new THREE.Vector3(
+                Math.cos(data.omega * time),
+                Math.sin(data.omega * time),
+                0,
+            ).multiplyScalar(data.radius).applyMatrix4(data.rotation);
 
-    // the last children are the center and the label
-    const numChildren = group.children.length - 2;
+            agent.position.set(pos.x, pos.y, pos.z);
+        }
 
-    for (let i = 0; i < numChildren; i++) {
-        const agent = group.children[i].children[0];
-        const agentData = agent.userData;
-
-        // Direction without rotation offset
-        const pos = new THREE.Vector3(
-            Math.cos(agentData.omega * time),
-            Math.sin(agentData.omega * time),
-            0,
-        ).multiplyScalar(agentData.radius).applyMatrix4(agentData.rotation);
-
-        agent.position.set(pos.x, pos.y, pos.z);
     }
 
+    // Add labels to the markets
+    addLabel(label) {
+        // Add DOM element
+        const div = document.createElement('div');
+        div.className = 'label';
+        div.id = this.id;
+        div.textContent = label;
+
+        const labelCSS = new CSS2DObject(div);
+        labelCSS.position.set(0, 10, 0);
+        this.group.add(labelCSS);
+    }
 }
+
+export { AgentGroup };

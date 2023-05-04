@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 
 import pams from './pams';
 import timer from './timer';
 
-import { createGroup, updateGroup } from './group';
+import { AgentGroup } from './group';
 
 // Configurations
 const kCameraOmega = 0.1;
@@ -63,47 +63,30 @@ function init() {
   marketTwo.position.set(-24, 0, 0);
 
   // Create groups around each market
-  const groupIndex = createGroup(marketIndex, kNumAgents, { radius: 6, geometry: new THREE.OctahedronGeometry(0.5) });
-  const groupOne = createGroup(marketOne, kNumAgents, { geometry: new THREE.DodecahedronGeometry(0.5) });
-  const groupTwo = createGroup(marketTwo, kNumAgents, { geometry: new THREE.DodecahedronGeometry(0.5) });
-  const groupArbitrators = createGroup(marketIndex, kNumAgents, { radius: 12, mode: 'ring' });
+  const agentsOne = new AgentGroup('one', marketOne, kNumAgents, { geometry: new THREE.DodecahedronGeometry(0.5) });
+  const agentsTwo = new AgentGroup('two', marketTwo, kNumAgents, { geometry: new THREE.DodecahedronGeometry(0.5) });
+  const agentsIndex = new AgentGroup('index', marketIndex, kNumAgents, { radius: 6, geometry: new THREE.OctahedronGeometry(0.5) });
+  const arbitrators = new AgentGroup('arbitrators', marketIndex, kNumAgents, { radius: 12, mode: 'ring' });
 
-  scene.add(groupIndex);
-  scene.add(groupOne);
-  scene.add(groupTwo);
-  scene.add(groupArbitrators);
+  scene.add(
+    agentsIndex.group,
+    agentsOne.group,
+    agentsTwo.group,
+    arbitrators.group,
+    marketOne,
+    marketTwo,
+    marketIndex,
+  );
 
 
   // Add labels to the markets
-  const divIndex = document.createElement('div');
-  const divOne = document.createElement('div');
-  const divTwo = document.createElement('div');
-  divIndex.className = 'label';
-  divOne.className = 'label';
-  divTwo.className = 'label';
-
-  divIndex.id = 'index';
-  divOne.id = 'one';
-  divTwo.id = 'two';
-
-  divIndex.textContent = 'Index Market';
-  divOne.textContent = 'Market 01';
-  divTwo.textContent = 'Market 02';
-
-  const labelIndex = new CSS2DObject(divIndex);
-  const labelOne = new CSS2DObject(divOne);
-  const labelTwo = new CSS2DObject(divTwo);
-  labelIndex.position.set(0, 5, 0);
-  labelOne.position.set(0, 10, 0);
-  labelTwo.position.set(0, 10, 0);
-
-  groupIndex.add(labelIndex);
-  groupOne.add(labelOne);
-  groupTwo.add(labelTwo);
+  agentsIndex.addLabel('Index Market');
+  agentsOne.addLabel('Market 01');
+  agentsTwo.addLabel('Market 02');
 
   // The order of the following elements corresponds to the order in PAMS
   markets = [marketOne, marketTwo, marketIndex];
-  groups = [groupOne, groupTwo, groupIndex, groupArbitrators];
+  groups = [agentsOne, agentsTwo, agentsIndex, arbitrators];
 }
 
 
@@ -125,7 +108,7 @@ function animate() {
 
   // Rotate the agents
   groups.forEach(group => {
-    updateGroup(group, time);
+    group.update(time);
   });
 
   // Rotate the markets
@@ -136,36 +119,37 @@ function animate() {
   })
 
   // Draw a line indicating a buy/sell transaction
-  pams.data().trades[pamsTime].forEach(order => {
-    const groupId = Math.floor(order.agent_id / kNumAgents);
-    const agentId = Math.floor(order.agent_id) % kNumAgents;
+  // pams.data().trades[pamsTime].forEach(order => {
+  //   const groupId = Math.floor(order.agent_id / kNumAgents);
+  //   const agentId = Math.floor(order.agent_id) % kNumAgents;
 
-    try {
-      const agentGroup = groups[groupId].children[agentId];
-      const line = agentGroup.children[1 + order.is_buy];
+  //   try {
+  //     const agentGroup = groups[groupId].children[agentId];
+  //     const line = agentGroup.children[1 + order.is_buy];
 
-      const market = markets[order.market_id];
-      let marketPos = new THREE.Vector3();
-      market.getWorldPosition(marketPos);
+  //     const market = markets[order.market_id];
+  //     let marketPos = new THREE.Vector3();
+  //     market.getWorldPosition(marketPos);
 
-      line.geometry.setFromPoints([
-        agentGroup.children[0].position,
-        line.worldToLocal(marketPos),
-      ]);
+  //     // TODO: Aggeregate line objects to single line per group to accelerate rendering
+  //     line.geometry.setFromPoints([
+  //       agentGroup.children[0].position,
+  //       line.worldToLocal(marketPos),
+  //     ]);
 
-      line.visible = true;
+  //     line.visible = true;
 
-      // The setTimeout function eliminates the need to make all lines invisible at every frame,
-      // reducing the load on the drawing process.
-      setTimeout(() => {
-        line.visible = false;
-      }, 10);
+  //     // The setTimeout function eliminates the need to make all lines invisible at every frame,
+  //     // reducing the load on the drawing process.
+  //     setTimeout(() => {
+  //       line.visible = false;
+  //     }, 30);
 
-    } catch (error) {
-      console.log(`@${pamsTime} g${groupId}:${agentId}`);
-      console.log(groups[groupId].children.length);
-    }
-  });
+  //   } catch (error) {
+  //     console.log(`@${pamsTime} g${groupId}:${agentId}`);
+  //     console.log(groups[groupId].children.length);
+  //   }
+  // });
 
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
