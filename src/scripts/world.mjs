@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 
-import pams from './pams';
-import timer from './timer';
+import pams from './pams.mjs';
+import timer from './timer.mjs';
 
-import { AgentGroup } from './group';
+import { AgentGroup } from './group.mjs';
 
 // Configurations
 const kCameraOmega = 0.1;
@@ -140,7 +140,7 @@ function animate() {
         startPoint, endPoint,
       ];
     }).flat();
-    lines.children[2 * mid].geometry.setFromPoints(buyPoints);
+    // lines.children[2 * mid].geometry.setFromPoints(buyPoints);
 
     // sell lines
     const sellPoints = mtrades[1].map((trade) => {
@@ -155,7 +155,7 @@ function animate() {
         startPoint, endPoint,
       ];
     }).flat();
-    lines.children[2 * mid + 1].geometry.setFromPoints(sellPoints);
+    // lines.children[2 * mid + 1].geometry.setFromPoints(sellPoints);
   });
 
   renderer.render(scene, camera);

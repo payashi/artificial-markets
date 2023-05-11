@@ -1,7 +1,7 @@
 import { GoogleCharts } from 'google-charts';
 
-import pams from './pams';
-import timer from './timer.js';
+import pams from './pams.mjs';
+import timer from './timer.mjs';
 
 // Number of plots to draw on the graph
 const kNumData = 300;

@@ -1,5 +1,5 @@
-import pams from './pams';
-import timer from './timer';
+import pams from './pams.mjs';
+import timer from './timer.mjs';
 
 // Press 1 to load PAMS's option 1
 // Press 2 to load PAMS's option 2
