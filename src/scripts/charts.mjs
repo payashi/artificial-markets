@@ -1,21 +1,23 @@
 import { GoogleCharts } from 'google-charts';
 
-import pams from './pams.mjs';
-import timer from './timer.mjs';
+import pams from './pams';
+import timer from './timer';
 
 // Number of plots to draw on the graph
 const kNumData = 300;
 
-export function drawChart(time) {
+const prices = await pams.prices();
+const duration = await pams.duration();
 
+export function drawChart(time) {
     const data = [
         ...Array.from({ length: kNumData }, (v, i) => [null, null, null]),
-        ...pams.data().prices,
+        ...prices,
     ];
-    const pamsTime = Math.round(time * 10) % pams.data().duration;
+    const pamsTime = Math.round(time * 10) % duration;
 
     // Padding is added to create a margin at the point of the null value
-    const prices = [
+    const formattedPrices = [
         [pamsTime - kNumData - 2, 0, 0, 0],
         [pamsTime - kNumData - 1, null, null, null],
         ...data.slice(pamsTime, pamsTime + kNumData).map((v, i) => [
@@ -33,7 +35,7 @@ export function drawChart(time) {
             { label: 'Market 02', id: 'm2', type: 'number' },
             { label: 'Index Market', id: 'mi', type: 'number' },
         ],
-        ...prices,
+        ...formattedPrices,
     ]);
 
     const options = {

@@ -96,11 +96,11 @@ function init() {
 
 
 // Animation loop
-function animate() {
+async function animate() {
   requestAnimationFrame(animate);
 
   const time = timer.time();
-  const pamsTime = Math.round(time * 10) % pams.data().duration;
+  const pamsTime = Math.round(time * 10) % (await pams.duration());
 
   // Set up the camera
   camera.position.set(
@@ -123,39 +123,46 @@ function animate() {
     ));
   })
 
+
+  const trades = (await pams.trades())[pamsTime];
+
+  // for (const mid in trades) {
+  //   const mtrades = trades[mid];
+  //   const startPoint = markets.children[mid].position;
+
+  //   const points = mtrades[1].map((trade) => {
+  //     const gid = trade[0];
+  //     const aid = trade[1];
+  //     const group = agents.children[gid];
+  //     const endPoint = new THREE.Vector3().addVectors(
+  //       agents.children[gid].position,
+  //       group.children[aid].position,
+  //     );
+  //     return [
+  //       startPoint, endPoint,
+  //     ];
+  //   }).flat();
+  //   lines.children[2 * mid + 1].geometry.setFromPoints(points);
+  // }
+
   // Draw a line indicating a buy/sell transaction
-  pams.data().trades[pamsTime].forEach((mtrades, mid) => {
+  trades.forEach((mtrades, mid) => {
     const startPoint = markets.children[mid].position;
 
-    // buy lines
-    const buyPoints = mtrades[0].map((trade) => {
-      const gid = trade[0];
-      const aid = trade[1];
-      const group = agents.children[gid];
-      const endPoint = new THREE.Vector3().addVectors(
-        agents.children[gid].position,
-        group.children[aid].position,
-      );
-      return [
-        startPoint, endPoint,
-      ];
-    }).flat();
-    // lines.children[2 * mid].geometry.setFromPoints(buyPoints);
-
-    // sell lines
-    const sellPoints = mtrades[1].map((trade) => {
-      const gid = trade[0];
-      const aid = trade[1];
-      const group = agents.children[gid];
-      const endPoint = new THREE.Vector3().addVectors(
-        agents.children[gid].position,
-        group.children[aid].position,
-      );
-      return [
-        startPoint, endPoint,
-      ];
-    }).flat();
-    // lines.children[2 * mid + 1].geometry.setFromPoints(sellPoints);
+    // 0: buy, 1: sell
+    for (let i = 0; i < 2; i++) {
+      const points = mtrades[i].map((trade) => {
+        const gid = trade[0];
+        const aid = trade[1];
+        const group = agents.children[gid];
+        const endPoint = new THREE.Vector3().addVectors(
+          agents.children[gid].position,
+          group.children[aid].position,
+        );
+        return [startPoint, endPoint];
+      }).flat();
+      lines.children[2 * mid + i].geometry.setFromPoints(points);
+    }
   });
 
   renderer.render(scene, camera);

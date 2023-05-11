@@ -17,15 +17,33 @@ const pams = {
     set(selected) {
         this.selected = selected;
     },
-    data: function () {
+    trades: async function () {
         if (this.selected == 1) {
-            return pams1;
+            return pams1.trades;
         } else if (this.selected == 2) {
-            return pams2;
+            return pams2.trades;
         } else {
             console.error(`Invalid index for pams data: ${selected}`);
         }
-    }
+    },
+    prices: async function () {
+        if (this.selected == 1) {
+            return pams1.prices;
+        } else if (this.selected == 2) {
+            return pams2.prices;
+        } else {
+            console.error(`Invalid index for pams data: ${selected}`);
+        }
+    },
+    duration: async function () {
+        if (this.selected == 1) {
+            return pams1.duration;
+        } else if (this.selected == 2) {
+            return pams2.duration;
+        } else {
+            console.error(`Invalid index for pams data: ${selected}`);
+        }
+    },
 };
 
 

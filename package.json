@@ -3,8 +3,10 @@
     "build": "npx vite build --outDir /workspace/artificial-markets/docs"
   },
   "dependencies": {
+    "chart.js": "^4.3.0",
     "firebase": "^9.20.0",
     "firebase-tools": "^11.29.1",
+    "google": "^2.1.0",
     "google-charts": "^2.0.0",
     "three": "0.150.0"
   },
