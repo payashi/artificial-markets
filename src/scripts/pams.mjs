@@ -9,8 +9,8 @@
  * 
  */
 
-import pams1 from '../pams1.json' assert {type: 'json'};
-import pams2 from '../pams2.json' assert {type: 'json'};
+import pams1 from '../res/pams1.json' assert {type: 'json'};
+import pams2 from '../res/pams2.json' assert {type: 'json'};
 
 const data1 = await pams1;
 const data2 = await pams2;

@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 from pams.runners import SequentialRunner
 from pams.logs.base import Logger, OrderLog, MarketStepEndLog
 
+am_dir = os.path.join('/', 'workspace', 'artificial-markets')
+
 # Create config objects
 shock_transfer_config = {
     "simulation": {
@@ -84,7 +86,6 @@ shock_transfer_config = {
     "FCNAgents-1": {
         "extends": "FCNAgent",
         "markets": ["SpotMarket-1"],
-        # "fundamentalWeight": {"expon": [0.9]},
     },
     "FCNAgents-2": {
         "extends": "FCNAgent",
@@ -93,7 +94,6 @@ shock_transfer_config = {
     "FCNAgents-I": {
         "extends": "FCNAgent",
         "markets": ["IndexMarket-I"],
-        "fundamentalWeight": {"expon": [9.0]},
     },
     "ArbitrageAgents": {
         "class": "ArbitrageAgent",
@@ -148,12 +148,13 @@ class NetworkLogger(Logger):
 
 
 class PamsExporter:
-    def __init__(self, config, offset=0):
+    def __init__(self, config, offset=0, prng=0):
         self.config = config
         self.logger = NetworkLogger()
+        self.prng = prng
         self.runner = SequentialRunner(
-            settings=config,
-            prng=random.Random(42),
+            settings=self.config,
+            prng=random.Random(prng),
             logger=self.logger
         )
         self.markets = self.config['simulation']['markets']
@@ -171,20 +172,22 @@ class PamsExporter:
         self._export()
         return self
 
-    def draw(self):
+    def draw(self, filename):
+        fullname = os.path.join(am_dir, 'pams', filename)
+        colors = 'rgb'
         for i, market in enumerate(self.markets):
             market_logs = dict(sorted(map(lambda x: (x["market_time"], x["market_price"]), filter(
                 lambda x: x["market_id"] == i, self.logger.market_logs))))
             plt.plot(list(market_logs.keys()), list(
-                market_logs.values()), label=market)
+                market_logs.values()), label=market, c=colors[i])
 
         plt.xlabel("ticks")
         plt.ylabel("market price")
         plt.legend()
-        plt.savefig('/workspace/artificial-markets/pams/fig')
+        plt.savefig(fullname)
 
     def save(self, filename):
-        with open(filename, 'x') as f:
+        with open(filename, 'w') as f:
             f.write(json.dumps(self.results))
 
     def _export(self):
@@ -233,9 +236,7 @@ class PamsExporter:
             }
         }
 
-
 if __name__ == '__main__':
-    print(__file__)
-    pe = PamsExporter(config2, offset=80).run()
-    pe.save(os.path.join('/', 'workspace',
-            'artificial-markets', 'pams', 'pams2.json'))
+    pe = PamsExporter(config2, offset=80, prng=42).run()
+    # pe.draw(f'fig_{prng}')
+    pe.save(os.path.join(am_dir, 'src', 'res', 'pams2.json'))
