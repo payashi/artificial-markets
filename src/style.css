@@ -4,7 +4,7 @@ body {
   background-color: black;
 }
 
-#chart {
+#chart-area {
   z-index: 1000;
   position: absolute;
   bottom: 0;

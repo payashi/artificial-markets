@@ -1,78 +1,92 @@
-import { GoogleCharts } from 'google-charts';
+import Chart from 'chart.js/auto'
 
 import pams from './pams';
 import timer from './timer';
 
 // Number of plots to draw on the graph
-const kNumData = 300;
+const kWindow = 200;
 
 const prices = await pams.prices();
 const duration = await pams.duration();
 
-export function drawChart(time) {
-    const data = [
-        ...Array.from({ length: kNumData }, (v, i) => [null, null, null]),
-        ...prices,
-    ];
-    const pamsTime = Math.round(time * 10) % duration;
-
-    // Padding is added to create a margin at the point of the null value
-    const formattedPrices = [
-        [pamsTime - kNumData - 2, 0, 0, 0],
-        [pamsTime - kNumData - 1, null, null, null],
-        ...data.slice(pamsTime, pamsTime + kNumData).map((v, i) => [
-            pamsTime - kNumData + i,
-            v[0], v[1], v[2],
-        ]),
-        [pamsTime, null, null, null],
-        [pamsTime + 1, 0, 0, 0],
-    ];
-
-    const dataTable = google.visualization.arrayToDataTable([
-        [
-            { label: 'time', id: 'time', type: 'number' },
-            { label: 'Market 01', id: 'm1', type: 'number' },
-            { label: 'Market 02', id: 'm2', type: 'number' },
-            { label: 'Index Market', id: 'mi', type: 'number' },
-        ],
-        ...formattedPrices,
-    ]);
-
-    // Drawing options for the line chart
-    const options = {
-        curveType: 'function',
-        backgroundColor: { fillOpacity: 0.1 },
-        colors: ['#ff0000', '#00ff00', '#0000ff', '#0f0f0f'],
-        chartArea: { 'width': '100%' },
-        vAxis: {
-            gridlines: { count: 0 },
-            textPosition: 'none',
-            baselineColor: 'none',
-            viewWindow: {
-                max: 320,
-                min: 200,
+const chart = new Chart(
+    document.getElementById('chart'),
+    {
+        type: 'line',
+        data: {
+            labels: Array.from({ length: kWindow }, (_, i) => i),
+            datasets: [
+                {
+                    label: 'Market 01',
+                    fill: false,
+                    borderColor: 'rgb(255, 0, 0)',
+                    tension: 0,
+                    pointStyle: false,
+                },
+                {
+                    label: 'Market 02',
+                    fill: false,
+                    borderColor: 'rgb(0, 255, 0)',
+                    tension: 0,
+                    pointStyle: false,
+                },
+                {
+                    label: 'Index Market',
+                    fill: false,
+                    borderColor: 'rgb(0, 0, 255)',
+                    tension: 0,
+                    pointStyle: false,
+                },
+            ]
+        },
+        // Drawing options for the line chart
+        options: {
+            layout: {
+                autoPadding: true,
+            },
+            scales: {
+                x: {
+                    type: 'category',
+                },
+                y: {
+                    type: 'linear',
+                    min: 280,
+                    max: 320,
+                }
+            },
+            plugins: {
+                legend: { display: false },
             }
         },
-        hAxis: {
-            gridlines: { count: 0 },
-            textPosition: 'none',
-            viewWindow: {
-                min: pamsTime - kNumData,
-                max: pamsTime - 1,
-            }
-        },
-        title: 'Stock Price Movement',
-        titleTextStyle: { color: 'white', fontSize: 24, bold: true },
-        // legend: { position: 'top', textStyle: { color: 'white', fontSize: 16 } },
-        interpolateNulls: false,
-    };
-    const chart = new GoogleCharts.api.visualization.LineChart(document.getElementById('chart'));
-    chart.draw(dataTable, options);
-}
+    }
+);
 
 setInterval(() => {
     if (timer.running) {
-        // Function `drawChart` must be synchronous
-        GoogleCharts.load(() => { drawChart(timer.time()); });
+        const now = Math.round(timer.time() * 10) % duration;
+        updateChart(now);
     }
-}, 30);
+}, 100);
+
+function updateChart(now) {
+
+    // Update time ticks
+    chart.data.labels = Array.from({ length: kWindow }, (_, i) => {
+        const num = Math.max(0, i + now - kWindow);
+        return ('000' + String(num)).slice(-3);
+        // return i + now - kWindow;
+    });
+    chart.data.datasets.forEach((dataset, i) => {
+        if (now <= kWindow) {
+            dataset.data = [
+                // Padding is added to create a margin at the point of the null value
+                ...Array.from({ length: kWindow - now }, () => null),
+                ...Array.from({ length: now }, (_, j) => prices[j][i])
+            ];
+        } else {
+            dataset.data = Array.from({ length: kWindow }, (_, j) => prices[j + now - kWindow][i]);
+        }
+    });
+
+    chart.update('none');
+}
