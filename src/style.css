@@ -4,6 +4,16 @@ body {
   background-color: black;
 }
 
+#info {
+  z-index: 2000;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  color: white;
+  background-color: #0000ffaa;
+  padding: 16px;
+}
+
 #chart-area {
   z-index: 1000;
   position: absolute;

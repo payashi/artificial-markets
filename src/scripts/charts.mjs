@@ -6,8 +6,8 @@ import timer from './timer';
 // Number of plots to draw on the graph
 const kWindow = 200;
 
-const prices = await pams.prices();
-const duration = await pams.duration();
+const prices = pams.prices();
+const config = pams.config();
 
 const chart = new Chart(
     document.getElementById('chart'),
@@ -17,23 +17,31 @@ const chart = new Chart(
             labels: Array.from({ length: kWindow }, (_, i) => i),
             datasets: [
                 {
-                    label: 'Market 01',
+                    label: 'Asset 01',
                     fill: false,
                     borderColor: 'rgb(255, 0, 0)',
                     tension: 0,
                     pointStyle: false,
                 },
                 {
-                    label: 'Market 02',
+                    label: 'Asset 02',
                     fill: false,
                     borderColor: 'rgb(0, 255, 0)',
                     tension: 0,
                     pointStyle: false,
                 },
                 {
-                    label: 'Index Market',
+                    label: 'Asset Index',
                     fill: false,
                     borderColor: 'rgb(0, 0, 255)',
+                    tension: 0,
+                    pointStyle: false,
+                },
+                {
+                    label: 'INDEX',
+                    fill: false,
+                    borderColor: 'rgba(255, 255, 255)',
+                    borderDash: [4, 2],
                     tension: 0,
                     pointStyle: false,
                 },
@@ -50,8 +58,8 @@ const chart = new Chart(
                 },
                 y: {
                     type: 'linear',
-                    min: 280,
-                    max: 320,
+                    min: config.minPrice,
+                    max: config.maxPrice,
                 }
             },
             plugins: {
@@ -63,7 +71,7 @@ const chart = new Chart(
 
 setInterval(() => {
     if (timer.running) {
-        const now = Math.round(timer.time() * 10) % duration;
+        const now = Math.round(timer.time() * 10) % config.duration;
         updateChart(now);
     }
 }, 100);
@@ -81,10 +89,10 @@ function updateChart(now) {
             dataset.data = [
                 // Padding is added to create a margin at the point of the null value
                 ...Array.from({ length: kWindow - now }, () => null),
-                ...Array.from({ length: now }, (_, j) => prices[j][i])
+                ...prices[i].slice(0, now),
             ];
         } else {
-            dataset.data = Array.from({ length: kWindow }, (_, j) => prices[j + now - kWindow][i]);
+            dataset.data = prices[i].slice(now-kWindow, now);
         }
     });
 

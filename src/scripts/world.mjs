@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 
-import pams from './pams.mjs';
-import timer from './timer.mjs';
+import pams from './pams';
+import timer from './timer';
 
 import { AgentGroup } from './group.mjs';
 
@@ -42,17 +42,17 @@ function init() {
 
   // Add markets
   const marketIndex = new THREE.Mesh(
-    new THREE.OctahedronGeometry(4),
+    new THREE.OctahedronGeometry(2),
     new THREE.MeshNormalMaterial(),
   );
 
   const marketOne = new THREE.Mesh(
-    new THREE.DodecahedronGeometry(6),
+    new THREE.DodecahedronGeometry(3),
     new THREE.MeshNormalMaterial(),
   );
 
   const marketTwo = new THREE.Mesh(
-    new THREE.DodecahedronGeometry(6),
+    new THREE.DodecahedronGeometry(3),
     new THREE.MeshNormalMaterial(),
   );
 
@@ -96,11 +96,11 @@ function init() {
 
 
 // Animation loop
-async function animate() {
+function animate() {
   requestAnimationFrame(animate);
 
   const time = timer.time();
-  const pamsTime = Math.round(time * 10) % (await pams.duration());
+  const pamsTime = Math.round(time * 10) % pams.config().duration;
 
   // Set up the camera
   camera.position.set(
@@ -124,7 +124,7 @@ async function animate() {
   })
 
 
-  const trades = (await pams.trades())[pamsTime];
+  const trades = pams.trades(pamsTime);
 
   // Draw a line indicating a buy/sell transaction
   trades.forEach((mtrades, mid) => {

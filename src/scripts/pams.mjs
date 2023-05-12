@@ -9,40 +9,34 @@
  * 
  */
 
-import pams1 from '../pams1.json';
-import pams2 from '../pams2.json';
+import pams1 from '../pams1.json' assert {type: 'json'};
+import pams2 from '../pams2.json' assert {type: 'json'};
+
+const data1 = await pams1;
+const data2 = await pams2;
 
 const pams = {
     selected: 1,
     set(selected) {
         this.selected = selected;
     },
-    trades: async function () {
+    data: function () {
         if (this.selected == 1) {
-            return pams1.trades;
+            return data1;
         } else if (this.selected == 2) {
-            return pams2.trades;
+            return data2;
         } else {
-            console.error(`Invalid index for pams data: ${selected}`);
+            return data1;
         }
     },
-    prices: async function () {
-        if (this.selected == 1) {
-            return pams1.prices;
-        } else if (this.selected == 2) {
-            return pams2.prices;
-        } else {
-            console.error(`Invalid index for pams data: ${selected}`);
-        }
+    trades: function (index) {
+        return this.data().trades[index];
     },
-    duration: async function () {
-        if (this.selected == 1) {
-            return pams1.duration;
-        } else if (this.selected == 2) {
-            return pams2.duration;
-        } else {
-            console.error(`Invalid index for pams data: ${selected}`);
-        }
+    prices: function () {
+        return this.data().prices;
+    },
+    config: function () {
+        return this.data().config;
     },
 };
 
