@@ -4,7 +4,7 @@ import timer from './timer.mjs';
 const info = document.getElementById('info');
 
 // isSmartPhone
-if (window.matchMedia && window.matchMedia('(max-device-width: 640px)').matches) {
+if (navigator.userAgentData && navigator.userAgentData.mobile) {
   info.style.display = 'none';
 }
 
