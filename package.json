@@ -1,6 +1,9 @@
 {
   "scripts": {
-    "build": "npx vite build --outDir /workspace/artificial-markets/docs"
+    "build": "npx vite build --outDir /workspace/artificial-markets/docs --target 'chrome112'",
+    "pams-setup": "pip install -r /workspace/artificial-markets/pams/requirements.txt",
+    "pams-run": "python3 /workspace/artificial-markets/pams/main.py",
+    "pams": "npm run pams-setup && npm run pams-run"
   },
   "dependencies": {
     "chart.js": "^4.3.0",

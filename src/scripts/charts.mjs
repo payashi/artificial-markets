@@ -38,6 +38,7 @@ export function drawChart(time) {
         ...formattedPrices,
     ]);
 
+    // Drawing options for the line chart
     const options = {
         curveType: 'function',
         backgroundColor: { fillOpacity: 0.1 },
@@ -62,7 +63,7 @@ export function drawChart(time) {
         },
         title: 'Stock Price Movement',
         titleTextStyle: { color: 'white', fontSize: 24, bold: true },
-        legend: { position: 'top', textStyle: { color: 'white', fontSize: 16 } },
+        // legend: { position: 'top', textStyle: { color: 'white', fontSize: 16 } },
         interpolateNulls: false,
     };
     const chart = new GoogleCharts.api.visualization.LineChart(document.getElementById('chart'));
@@ -71,6 +72,7 @@ export function drawChart(time) {
 
 setInterval(() => {
     if (timer.running) {
+        // Function `drawChart` must be synchronous
         GoogleCharts.load(() => { drawChart(timer.time()); });
     }
 }, 30);

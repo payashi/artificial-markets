@@ -3,7 +3,6 @@ import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 class AgentGroup extends THREE.Group {
     constructor(
-        id,
         center,
         numChildren,
         {

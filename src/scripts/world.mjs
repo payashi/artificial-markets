@@ -64,10 +64,10 @@ function init() {
   marketTwo.position.set(-24, 0, 0);
 
   // Create groups around each market
-  const agentsOne = new AgentGroup('one', marketOne, kNumAgents, { geometry: new THREE.DodecahedronGeometry(0.5) });
-  const agentsTwo = new AgentGroup('two', marketTwo, kNumAgents, { geometry: new THREE.DodecahedronGeometry(0.5) });
-  const agentsIndex = new AgentGroup('index', marketIndex, kNumAgents, { radius: 6, geometry: new THREE.OctahedronGeometry(0.5) });
-  const arbitrators = new AgentGroup('arbitrators', marketIndex, kNumAgents, { radius: 12, mode: 'ring' });
+  const agentsOne = new AgentGroup(marketOne, kNumAgents, { geometry: new THREE.DodecahedronGeometry(0.5) });
+  const agentsTwo = new AgentGroup(marketTwo, kNumAgents, { geometry: new THREE.DodecahedronGeometry(0.5) });
+  const agentsIndex = new AgentGroup(marketIndex, kNumAgents, { radius: 6, geometry: new THREE.OctahedronGeometry(0.5) });
+  const arbitrators = new AgentGroup(marketIndex, kNumAgents, { radius: 12, mode: 'ring' });
 
   // Add labels to the markets
   agentsIndex.addLabel('Index Market', 'index');
@@ -81,11 +81,11 @@ function init() {
   for (let i = 0; i < markets.children.length; i++) {
     const buyLine = new THREE.Line(
       new THREE.BufferGeometry(),
-      new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 1 })
+      new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 3 })
     );
     const sellLine = new THREE.Line(
       new THREE.BufferGeometry(),
-      new THREE.LineBasicMaterial({ color: 0x428af5, linewidth: 1 })
+      new THREE.LineBasicMaterial({ color: 0x428af5, linewidth: 3 })
     );
     lines.add(buyLine);
     lines.add(sellLine);
@@ -125,25 +125,6 @@ async function animate() {
 
 
   const trades = (await pams.trades())[pamsTime];
-
-  // for (const mid in trades) {
-  //   const mtrades = trades[mid];
-  //   const startPoint = markets.children[mid].position;
-
-  //   const points = mtrades[1].map((trade) => {
-  //     const gid = trade[0];
-  //     const aid = trade[1];
-  //     const group = agents.children[gid];
-  //     const endPoint = new THREE.Vector3().addVectors(
-  //       agents.children[gid].position,
-  //       group.children[aid].position,
-  //     );
-  //     return [
-  //       startPoint, endPoint,
-  //     ];
-  //   }).flat();
-  //   lines.children[2 * mid + 1].geometry.setFromPoints(points);
-  // }
 
   // Draw a line indicating a buy/sell transaction
   trades.forEach((mtrades, mid) => {
