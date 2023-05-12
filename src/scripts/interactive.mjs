@@ -1,8 +1,12 @@
 import pams from './pams.mjs';
 import timer from './timer.mjs';
 
-
 const info = document.getElementById('info');
+
+// isSmartPhone
+if (window.matchMedia && window.matchMedia('(max-device-width: 640px)').matches) {
+  info.style.display = 'none';
+}
 
 document.addEventListener(
   "keydown",
